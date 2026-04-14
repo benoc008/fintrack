@@ -39,7 +39,10 @@ export default function App() {
   const [isClearDialogOpen, setIsClearDialogOpen] = useState(false);
   const [state, setState] = useState<FinancialState>(() => {
     const saved = localStorage.getItem('fintrack_state');
-    return saved ? JSON.parse(saved) : INITIAL_STATE;
+    if (!saved) return INITIAL_STATE;
+    const parsed = JSON.parse(saved);
+    // Merge with INITIAL_STATE to ensure new fields (like customCategories) exist
+    return { ...INITIAL_STATE, ...parsed };
   });
 
   useEffect(() => {
@@ -72,6 +75,24 @@ export default function App() {
       lastUpdated: new Date().toISOString()
     }));
     toast.success(`Added ${newTransactions.length} transactions`);
+  };
+
+  const updateTransaction = (id: string, updates: Partial<Transaction>) => {
+    setState(prev => ({
+      ...prev,
+      transactions: prev.transactions.map(t => t.id === id ? { ...t, ...updates } : t),
+      lastUpdated: new Date().toISOString()
+    }));
+  };
+
+  const addCategory = (category: string) => {
+    if (state.customCategories.includes(category)) return;
+    setState(prev => ({
+      ...prev,
+      customCategories: [...prev.customCategories, category],
+      lastUpdated: new Date().toISOString()
+    }));
+    toast.success(`Category "${category}" added`);
   };
 
   const confirmClearData = () => {
@@ -171,7 +192,11 @@ export default function App() {
           </div>
 
           <TabsContent value="dashboard" className="space-y-4">
-            <Dashboard state={state} />
+            <Dashboard 
+              state={state} 
+              onUpdateTransaction={updateTransaction}
+              onAddCategory={addCategory}
+            />
           </TabsContent>
 
           <TabsContent value="upload" className="space-y-4">

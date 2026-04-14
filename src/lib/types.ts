@@ -34,6 +34,7 @@ export interface FinancialState {
   goals: SavingsGoal[];
   retirement: RetirementPlan;
   accounts: string[];
+  customCategories: string[];
 }
 
 export const INITIAL_STATE: FinancialState = {
@@ -49,9 +50,10 @@ export const INITIAL_STATE: FinancialState = {
     targetMonthlyIncome: 3000,
   },
   accounts: [],
+  customCategories: [],
 };
 
-export const categories = [
+export const DEFAULT_CATEGORIES = [
   'Housing',
   'Food',
   'Transport',
