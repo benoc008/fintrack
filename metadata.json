@@ -1,0 +1,6 @@
+{
+  "name": "FinTrack Secure",
+  "description": "A private, local-first personal finance tracker that processes bank statements and generates portable summaries without a database.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
