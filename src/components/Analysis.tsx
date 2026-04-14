@@ -63,7 +63,11 @@ export default function Analysis({ state }: AnalysisProps) {
   const monthlyData = useMemo(() => {
     if (filteredTransactions.length === 0) return [];
     
-    const sorted = [...filteredTransactions].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    const sorted = [...filteredTransactions]
+      .filter(t => !isNaN(new Date(t.date).getTime()))
+      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    
+    if (sorted.length === 0) return [];
     const start = new Date(sorted[0].date);
     const end = new Date();
     
@@ -222,7 +226,15 @@ export default function Analysis({ state }: AnalysisProps) {
               <div key={t.id || index} className="flex items-center justify-between p-3 rounded-lg border bg-muted/10">
                 <div className="flex flex-col">
                   <span className="font-medium">{t.description}</span>
-                  <span className="text-xs text-muted-foreground">{format(new Date(t.date), 'MMMM dd, yyyy')} • {t.category}</span>
+                  <span className="text-xs text-muted-foreground">
+                    {(() => {
+                      try {
+                        return format(new Date(t.date), 'MMMM dd, yyyy');
+                      } catch (e) {
+                        return t.date;
+                      }
+                    })()} • {t.category}
+                  </span>
                 </div>
                 <span className="font-bold text-rose-600">-{selectedCurrency} {Math.abs(t.amount).toFixed(2)}</span>
               </div>

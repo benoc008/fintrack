@@ -142,7 +142,13 @@ export default function Dashboard({ state }: DashboardProps) {
                 {recentTransactions.map((t, index) => (
                   <TableRow key={t.id || index}>
                     <TableCell className="font-mono text-xs">
-                      {format(new Date(t.date), 'MMM dd, yyyy')}
+                      {(() => {
+                        try {
+                          return format(new Date(t.date), 'MMM dd, yyyy');
+                        } catch (e) {
+                          return t.date;
+                        }
+                      })()}
                     </TableCell>
                     <TableCell className="font-medium">{t.description}</TableCell>
                     <TableCell>

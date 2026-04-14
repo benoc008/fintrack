@@ -62,6 +62,7 @@ async function processWithOllama(text: string): Promise<Transaction[]> {
       body: JSON.stringify({
         model: "gemma4",
         prompt: `Extract all transactions from this bank statement text and return ONLY a JSON array.
+        CRITICAL: The "date" field MUST be in YYYY-MM-DD format.
         Each object must have: date (YYYY-MM-DD), description, amount (negative for expense, positive for income), currency (CHF, EUR, USD), category, type (income, expense, investment), and account.
         
         Text: ${text}`,
@@ -92,10 +93,36 @@ async function processWithOllama(text: string): Promise<Transaction[]> {
     
     return result.map((t: any) => ({
       ...t,
+      // Normalize date format (e.g., DD.MM.YYYY to YYYY-MM-DD)
+      date: normalizeDate(t.date),
       id: Math.random().toString(36).substring(2, 11)
     }));
   } catch (error) {
     console.error("Error processing with Ollama:", error);
     throw new Error("Local model (Ollama) failed. Make sure Ollama is running with the correct model.");
   }
+}
+
+function normalizeDate(dateStr: string): string {
+  if (!dateStr) return new Date().toISOString().split('T')[0];
+  
+  // Handle DD.MM.YYYY
+  const dotMatch = dateStr.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
+  if (dotMatch) {
+    return `${dotMatch[3]}-${dotMatch[2]}-${dotMatch[1]}`;
+  }
+  
+  // Handle DD/MM/YYYY
+  const slashMatch = dateStr.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (slashMatch) {
+    return `${slashMatch[3]}-${slashMatch[2]}-${slashMatch[1]}`;
+  }
+
+  // If it's already YYYY-MM-DD or something else, try to parse it
+  const d = new Date(dateStr);
+  if (!isNaN(d.getTime())) {
+    return d.toISOString().split('T')[0];
+  }
+
+  return dateStr; // Fallback
 }
