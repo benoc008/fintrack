@@ -200,7 +200,11 @@ export default function App() {
           </TabsContent>
 
           <TabsContent value="upload" className="space-y-4">
-            <Uploader onTransactionsProcessed={addTransactions} />
+            <Uploader 
+              onTransactionsProcessed={addTransactions} 
+              customCategories={state.customCategories}
+              onAddCategory={addCategory}
+            />
           </TabsContent>
 
           <TabsContent value="analysis" className="space-y-4">

@@ -11,15 +11,19 @@ import { processStatement } from '../lib/gemini';
 import { Transaction } from '../lib/types';
 import { toast } from 'sonner';
 import Papa from 'papaparse';
+import Reviewer from './Reviewer';
 
 interface UploaderProps {
   onTransactionsProcessed: (transactions: Transaction[]) => void;
+  customCategories: string[];
+  onAddCategory: (category: string) => void;
 }
 
-export default function Uploader({ onTransactionsProcessed }: UploaderProps) {
+export default function Uploader({ onTransactionsProcessed, customCategories, onAddCategory }: UploaderProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [useLocalModel, setUseLocalModel] = useState(false);
   const [files, setFiles] = useState<File[]>([]);
+  const [pendingTransactions, setPendingTransactions] = useState<Transaction[] | null>(null);
 
   const onDrop = useCallback((acceptedFiles: File[]) => {
     setFiles(prev => [...prev, ...acceptedFiles]);
@@ -58,9 +62,9 @@ export default function Uploader({ onTransactionsProcessed }: UploaderProps) {
         allNewTransactions = [...allNewTransactions, ...transactions];
       }
 
-      onTransactionsProcessed(allNewTransactions);
+      setPendingTransactions(allNewTransactions);
       setFiles([]);
-      toast.success("All statements processed successfully!");
+      toast.success("Statements processed. Please review the data.");
     } catch (error) {
       console.error(error);
       toast.error("Failed to process some statements. Please try again.");
@@ -72,6 +76,31 @@ export default function Uploader({ onTransactionsProcessed }: UploaderProps) {
   const removeFile = (index: number) => {
     setFiles(prev => prev.filter((_, i) => i !== index));
   };
+
+  const handleConfirmReview = (transactions: Transaction[]) => {
+    onTransactionsProcessed(transactions);
+    setPendingTransactions(null);
+    toast.success(`${transactions.length} transactions added to dashboard`);
+  };
+
+  const handleCancelReview = () => {
+    setPendingTransactions(null);
+    toast.info("Upload cancelled");
+  };
+
+  if (pendingTransactions) {
+    return (
+      <div className="max-w-5xl mx-auto">
+        <Reviewer 
+          transactions={pendingTransactions} 
+          customCategories={customCategories}
+          onConfirm={handleConfirmReview}
+          onCancel={handleCancelReview}
+          onAddCategory={onAddCategory}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
